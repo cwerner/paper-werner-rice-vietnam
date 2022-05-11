@@ -1,0 +1,7 @@
+[core]
+    remote = ifu-remote
+
+['remote "ifu-remote"']
+    url = s3://paper-vietnam/dvc
+    endpointurl = https://s3.imk-ifu.kit.edu:10443
+
