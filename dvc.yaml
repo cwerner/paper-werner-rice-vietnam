@@ -1,0 +1,62 @@
+stages:
+  prepare_input:
+    cmd: >-
+      echo "prepare input" &&
+      echo "dlsc ..." &&
+      echo "cdgen ..." && 
+      echo "management ..."
+    outs:
+      - data/modeldrivers
+
+  run_simulations:
+    cmd: >-
+      # do this in on a big machine (bio11)
+      # ...
+      echo "ldndc ..."
+    deps:
+      - data/modeldrivers
+    outs:
+      - data/modeloutput
+
+  postprocess_netcdf:
+    cmd: >-
+      echo "ldndc2nc"
+    deps:
+      - data/modeloutput
+    outs:
+      - data/intermediate
+
+  postprocess_aggregate:
+    cmd: >-
+      echo "scripts/aggreagte_nc.py"
+    deps:
+      - data/intermediate
+    outs:
+      - data/aggregated
+
+  analysis_relaimpo:
+    cmd: >-
+      echo "scripts/relaimpo.py"
+    deps:
+      - data/aggregated
+    outs:
+      - data/analysis/relaimpo.json
+  
+  analysis_summary_stats:
+    cmd: >-
+      echo "scripts/summary_stats.py"
+    deps:
+      - data/aggregated
+    outs:
+      - data/analysis/summary_stats.json
+
+  analysis_plots:
+    cmd: >-
+      echo "scripts/plots_basemaps.py" &&
+      echo "scripts/plots_emissions.py" &&
+      echo "scripts/plots_timeseries.py"
+    deps:
+      - data/aggregated
+      - data/raw/gis
+    outs:
+      - data/analysis/plots
