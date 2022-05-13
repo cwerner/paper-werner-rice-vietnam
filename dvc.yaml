@@ -18,21 +18,22 @@ stages:
     outs:
       - data/modeloutput
 
-  postprocess_netcdf:
-    cmd: >-
-      echo "ldndc2nc"
-    deps:
-      - data/modeloutput
-    outs:
-      - data/intermediate
+  # postprocess_netcdf:
+  #   cmd: >-
+  #     echo "ldndc2nc"
+  #   deps:
+  #     - data/modeloutput
+  #   outs:
+  #     - data/intermediate
 
   postprocess_aggregate:
     cmd: >-
-      echo "scripts/aggreagte_nc.py"
+      mkdir data/intermediate;
+      python scripts/postprocess_aggregate.py data/raw/modeloutput data/intermediate --debug
     deps:
-      - data/intermediate
+      - data/raw/modeloutput
     outs:
-      - data/aggregated
+      - data/intermediate
 
   analysis_relaimpo:
     cmd: >-

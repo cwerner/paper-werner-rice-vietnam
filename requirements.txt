@@ -1,4 +1,9 @@
 rasterio>=1.3a4
 dvc[s3]
 python_dotenv
-
+typer
+loguru 
+rich
+rich_click[typer]
+dask[distributed]
+xarray

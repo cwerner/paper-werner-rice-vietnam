@@ -1,7 +1,6 @@
 [core]
     remote = ifu-remote
-
+    autostage = true
 ['remote "ifu-remote"']
     url = s3://paper-vietnam/dvc
     endpointurl = https://s3.imk-ifu.kit.edu:10443
-
