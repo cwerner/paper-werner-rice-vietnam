@@ -7,3 +7,4 @@ rich
 rich_click[typer]
 dask[distributed]
 xarray
+omegaconf

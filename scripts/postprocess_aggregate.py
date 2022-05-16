@@ -1,31 +1,53 @@
-import rich_click.typer as typer
+import logging
+import sys
+import warnings
+from functools import partial
+from pathlib import Path
+from typing import Any, Iterable, Optional
 
+import numpy
+import rich_click.typer as typer
+import xarray as xr
+from dask.distributed import Client
+from joblib import cpu_count, delayed, Parallel
 from loguru import logger
+from omegaconf import OmegaConf
 from rich.logging import RichHandler
 from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
-
-import sys
-from typing import Iterable, Any, Optional
-
-from pathlib import Path
-import xarray as xr
-
-from functools import partial
-import numpy
-import logging
-from dask.distributed import Client
-
-from joblib import Parallel, delayed, cpu_count
-
-
-import warnings
 
 warnings.filterwarnings("ignore")
 
 logger.configure(handlers=[{"sink": RichHandler(), "format": "{message}"}])
 
 
-from rich.progress import Progress
+vars_annual = [
+    "surfacetemperature",
+    "surfacewater",
+    "irrigation",
+    "precipitation",
+    "DW_above",
+    "C_stubble",
+    "DW_fru_export",
+    "C_plant_litter",
+    "dC_ch4_emis",
+    "dC_co2_emis_hetero",
+    "dN_n2o_emis",
+    "dN_n2_emis",
+    "dN_nh3_emis",
+    "dN_fertilizer",
+    "dC_fertilizer",
+]
+
+vars_seasonal = [
+    "surfacetemperature",
+    "surfacewater",
+    "irrigation",
+    "precipitation",
+    "DW_above",
+    "dC_ch4_emis",
+    "dC_co2_emis_hetero",
+    "dN_n2o_emis",
+]
 
 
 class ProgressParallel(Parallel):
@@ -139,7 +161,7 @@ def calc_seasonal_pctl(
                     dsout[var] = (
                         ds[var]
                         .chunk(dict(file=-1, dayofyear=-1, lat=10, lon=10))
-                        .quantile(percentiles, dim="file", skipna=True)
+                        .quantile(percentiles, dim="file", skipna=False)
                         .compute()
                     )
 
@@ -176,7 +198,7 @@ def calc_annual_pctl(
                 dsout[var] = (
                     ds[var]
                     .chunk(dict(file=-1, year=-1, lat=10, lon=10))
-                    .quantile(percentiles, dim="file", skipna=True)
+                    .quantile(percentiles, dim="file", skipna=False)
                     .compute()
                 )
 
@@ -196,42 +218,26 @@ def main(
         logger.remove()
         logger.add(sys.stdout, level="INFO")
 
+    if (Path.cwd() / "params.yaml").is_file():
+        logger.debug("Loading parameter file")
+        config = OmegaConf.load(Path.cwd() / "params.yaml")
+    else:
+        logger.debug("No parameter file found - using defaults")
+        config = OmegaConf.create(
+            {
+                "vars_annual": vars_annual,
+                "vars_seasonal": vars_seasonal,
+            }
+        )
+    logger.debug(f"Config: {config}")
+
     workload = list(indir.glob("*.nc"))
 
     logger.debug(f"Using {cores} cores for {len(workload)} files")
 
-    vars_annual = [
-        "surfacetemperature",
-        "surfacewater",
-        "irrigation",
-        "precipitation",
-        "DW_above",
-        "C_stubble",
-        "DW_fru_export",
-        "C_plant_litter",
-        "dC_ch4_emis",
-        "dC_co2_emis_hetero",
-        "dN_n2o_emis",
-        "dN_n2_emis",
-        "dN_nh3_emis",
-        "dN_fertilizer",
-        "dC_fertilizer",
-    ]
+    process_annual(workload, outdir=outdir, vars=config.vars_annual, cores=cores)
 
-    vars_seasonal = [
-        "surfacetemperature",
-        "surfacewater",
-        "irrigation",
-        "precipitation",
-        "DW_above",
-        "dC_ch4_emis",
-        "dC_co2_emis_hetero",
-        "dN_n2o_emis",
-    ]
-
-    process_annual(workload, outdir=outdir, vars=vars_annual, cores=cores)
-
-    process_seasonal(workload, outdir=outdir, vars=vars_seasonal, cores=cores)
+    process_seasonal(workload, outdir=outdir, vars=config.vars_seasonal, cores=cores)
 
     with Client(silence_logs=logging.ERROR) as client:
         logger.debug(
