@@ -1,0 +1,26 @@
+vars_annual:
+- surfacetemperature
+- surfacewater
+- irrigation
+- precipitation
+- DW_above
+- C_stubble
+- DW_fru_export
+- C_plant_litter
+- dC_ch4_emis
+- dC_co2_emis_hetero
+- dN_n2o_emis
+- dN_n2_emis
+- dN_nh3_emis
+- dN_fertilizer
+- dC_fertilizer
+
+vars_seasonal:
+- surfacetemperature
+- surfacewater
+- irrigation
+- precipitation
+- DW_above
+- dC_ch4_emis
+- dC_co2_emis_hetero
+- dN_n2o_emis
