@@ -29,9 +29,10 @@ stages:
   postprocess_aggregate:
     cmd: >-
       mkdir data/intermediate;
-      python scripts/postprocess_aggregate.py data/raw/modeloutput data/intermediate --debug
+      python scripts/postprocess_aggregate.py data/raw/modeloutput data/intermediate data/raw/misc/VN_MISC5_V2.nc
     deps:
       - data/raw/modeloutput
+      - data/raw/misc/VN_MISC5_V2.nc
     outs:
       - data/intermediate
 
