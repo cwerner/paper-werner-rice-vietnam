@@ -8,3 +8,7 @@ rich_click[typer]
 dask[distributed]
 xarray
 omegaconf
+
+proplot
+geopandas
+cartopy==0.19.0.post1   # pinned so we don't require proj >= 8
