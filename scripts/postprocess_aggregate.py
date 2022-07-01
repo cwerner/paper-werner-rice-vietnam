@@ -352,16 +352,6 @@ def main(
 
     logger.debug(f"Using {cores} cores")
 
-    logger.info("Stage 0: assert files are compatible")
-
-    workload = sorted(list(indir.glob("VN_arable_*.nc")))
-
-    for w in workload:
-        with xr.open_dataset(w) as ds:
-            logger.info(ds.name, ds.data_vars)
-
-    exit()
-
     logger.info("Stage 1: creating annual and seasonal source nc files")
 
     # use tmp dir for those files...
