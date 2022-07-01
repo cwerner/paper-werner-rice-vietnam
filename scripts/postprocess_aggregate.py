@@ -7,7 +7,7 @@ from io import StringIO
 from pathlib import Path
 from typing import Any, Iterable, Optional, Union
 
-import numpy
+import numpy as np
 import pandas as pd
 import rich_click.typer as typer
 import xarray as xr
@@ -102,10 +102,14 @@ def aggregate_seasonal(ncfile: Path, *, outdir: Path, vars: Iterable[str]) -> No
     comp = dict(zlib=True, complevel=5)
     encoding = {}
 
+    max_date = "2019-12-31"
+
     with xr.open_dataset(ncfile)[vars] as ds:
         for var in ds.data_vars:
             encoding[var] = comp
-        ds.groupby("time.dayofyear").mean(dim="time").to_netcdf(
+        ds.sel(time=slice(None, max_date)).groupby("time.dayofyear").mean(
+            dim="time"
+        ).to_netcdf(
             outdir / ncfile.name.replace(".nc", "_seasonal.nc"), encoding=encoding
         )
 
@@ -124,23 +128,38 @@ def merge_by_merge_table(
     comp = dict(zlib=True, complevel=5)
     encoding = {}
 
+    map_irri = dict(zip(merge_table.regionid, merge_table.irri))
+    map_mixed = dict(zip(merge_table.regionid, merge_table.mixed))
+
     with xr.open_dataset(ncfile1) as ds1, xr.open_dataset(ncfile2) as ds2:
-        frac1 = ref.copy().where(ds1.surfacetemperature.isnull is False)
-        frac2 = ref.copy().where(ds2.surfacetemperature.isnull is False)
+        dims = dict(ds1.dims)
+        dims.pop("lat", None)
+        dims.pop("lon", None)
 
-        for _, row in merge_table.iterrows():
-            frac1 = frac1.where(frac1 == int(row["regionid"]), int(row["irri"]))
-            frac2 = frac2.where(frac2 == int(row["regionid"]), int(row["mixed"]))
+        mask1 = ds1.surfacetemperature.mean(dim=dims) > -100
+        mask2 = ds2.surfacetemperature.mean(dim=dims) > -100
 
-        dsout = ds1 * frac1 + ds2 * frac2
+        frac1a = (ref * mask1.where(mask1 > 0)).fillna(0).astype(int)
+        frac2a = (ref * mask2.where(mask2 > 0)).fillna(0).astype(int)
+
+        frac1 = np.copy(frac1a.values).astype(float)
+        frac2 = np.copy(frac2a.values).astype(float)
+
+        for old, new in map_irri.items():
+            frac1[frac1a.values == old] = new
+
+        for old, new in map_mixed.items():
+            frac2[frac2a.values == old] = new
+
+        frac1a[:] = frac1
+        frac2a[:] = frac2
+        dsout = (ds1 * frac1 + ds2 * frac2).where(mask1 > 0)
+
         for var in dsout.data_vars:
             encoding[var] = comp
 
         dsout.to_netcdf(
-            outdir
-            / ncfile1.name.replace("_irrigated-", "_merged-").replace(
-                "_upland-", "_merged-"
-            ),
+            outdir / ncfile1.name.replace("_irrigated-ir72", "_merged-ir72"),
             encoding=encoding,
         )
 
@@ -157,9 +176,6 @@ def process_merge_mana_scens(
 
     ftype = "seasonal" if "seasonal" in str(workload1[0]) else "yearly"
 
-    logger.debug(workload1)
-    logger.debug(workload2)
-
     func = partial(
         merge_by_merge_table, outdir=outdir, merge_table=merge_table, ref=ref
     )
@@ -167,6 +183,9 @@ def process_merge_mana_scens(
         delayed(func)(ncfile1, ncfile2)
         for ncfile1, ncfile2 in zip(workload1, workload2)
     )
+
+    # merge_by_merge_table(workload1[0], workload2[0], outdir=outdir, merge_table=merge_table, ref=ref)
+    # x = input("?")
 
 
 def process_seasonal(
@@ -187,6 +206,8 @@ def aggregate_annual(ncfile: Path, *, outdir: Path, vars: Iterable[str]) -> None
     comp = dict(zlib=True, complevel=5)
     encoding = {}
 
+    max_date = "2019-12-31"
+
     with xr.open_dataset(ncfile)[vars] as ds:
         for var in ds.data_vars:
             encoding[var] = comp
@@ -194,8 +215,18 @@ def aggregate_annual(ncfile: Path, *, outdir: Path, vars: Iterable[str]) -> None
         mean_vars = ["surfacewater", "surfacetemperature"]
         sum_vars = [x for x in ds.data_vars if x not in mean_vars]
 
-        sum_ds = ds[sum_vars].groupby("time.year").sum(dim="time")
-        mean_ds = ds[mean_vars].groupby("time.year").mean(dim="time")
+        sum_ds = (
+            ds[sum_vars]
+            .sel(time=slice(None, max_date))
+            .groupby("time.year")
+            .sum(dim="time")
+        )
+        mean_ds = (
+            ds[mean_vars]
+            .sel(time=slice(None, max_date))
+            .groupby("time.year")
+            .mean(dim="time")
+        )
         dsout = xr.merge([sum_ds, mean_ds])
         dsout.to_netcdf(
             outdir / ncfile.name.replace(".nc", "_yearly.nc"), encoding=encoding
@@ -242,8 +273,8 @@ def calc_seasonal_pctl(
             for var in sorted(ds.data_vars):
                 encoding[var] = comp
 
-                with numpy.warnings.catch_warnings():
-                    numpy.warnings.filterwarnings(
+                with np.warnings.catch_warnings():
+                    np.warnings.filterwarnings(
                         "ignore"
                     )  # , r'All-NaN (slice|axis) encountered')
                     dsout[var] = (
@@ -320,47 +351,55 @@ def main(
         )
 
     logger.debug(f"Using {cores} cores")
+
+    logger.info("Stage 0: assert files are compatible")
+
+    workload = sorted(list(indir.glob("VN_arable_*.nc")))
+
+    for w in workload:
+        with xr.open_dataset(w) as ds:
+            logger.info(ds.name, ds.data_vars)
+
+    exit()
+
     logger.info("Stage 1: creating annual and seasonal source nc files")
 
     # use tmp dir for those files...
     with tempfile.TemporaryDirectory(dir=Path.cwd()) as tmp:
         ptmp = Path(tmp)
+        logger.info(ptmp)
 
         logger.debug(f"Using tmp folder {tmp}")
         logger.info("Stage 1a: Fully irrigated management files")
 
-        workload = sorted(list(indir.glob("VN_arable_irrigated-*.nc")))
+        workload = sorted(list(indir.glob("VN_arable_irrigated-ir72*.nc")))
+        logger.info(workload)
         process_annual(workload, outdir=tmp, vars=list(config.vars_annual), cores=cores)
         process_seasonal(
             workload, outdir=tmp, vars=list(config.vars_seasonal), cores=cores
         )
 
-        logger.info("Stage 1b: Upland management files")
+        logger.info("Stage 1b: Fully irrigated and upland crop management files")
 
-        # workload = list(indir.glob("*VN_arable_upland_*.nc"))
-        # process_annual(workload, outdir=tmp, vars=config.vars_annual, cores=cores)
-        # process_seasonal(workload, outdir=tmp, vars=config.vars_seasonal, cores=cores)
-
-        # fake files
-        import shutil
-
-        [
-            shutil.copyfile(f, ptmp / str(f.name).replace("irrigated-", "upland-"))
-            for f in ptmp.glob("*irrigated*.nc")
-        ]
+        workload = sorted(list(indir.glob("VN_arable_irrigated-upland-ir72*.nc")))
+        logger.info(workload)
+        process_annual(workload, outdir=tmp, vars=list(config.vars_annual), cores=cores)
+        process_seasonal(
+            workload, outdir=tmp, vars=list(config.vars_seasonal), cores=cores
+        )
 
         logger.info("Stage 2: merge scenarios based on merge table")
 
         ref_da: xr.DataArray = xr.open_dataset(reffile)["regionid"].load()
 
-        workload1 = sorted(list(ptmp.glob("*irrigated*_yearly.nc")))
-        workload2 = sorted(list(ptmp.glob("*upland*_yearly.nc")))
+        workload1 = sorted(list(ptmp.glob("*irrigated-ir72*_yearly.nc")))
+        workload2 = sorted(list(ptmp.glob("*irrigated-upland-ir72*_yearly.nc")))
         process_merge_mana_scens(
             workload1, workload2, outdir=tmp, ref=ref_da, cores=cores
         )
 
-        workload1 = sorted(list(ptmp.glob("*irrigated*_seasonal.nc")))
-        workload2 = sorted(list(ptmp.glob("*upland*_seasonal.nc")))
+        workload1 = sorted(list(ptmp.glob("*irrigated-ir72*_seasonal.nc")))
+        workload2 = sorted(list(ptmp.glob("*irrigated-upland-ir72*_seasonal.nc")))
         process_merge_mana_scens(
             workload1, workload2, outdir=tmp, ref=ref_da, cores=cores
         )
