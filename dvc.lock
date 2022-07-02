@@ -2,17 +2,17 @@ schema: '2.0'
 stages:
   postprocess_aggregate:
     cmd: mkdir data/intermediate; python scripts/postprocess_aggregate.py data/raw/modeloutput
-      data/intermediate data/raw/misc/VN_MISC5_V2.nc --cores=16
+      data/intermediate data/raw/misc/VN_MISC5_V2.nc
     deps:
     - path: data/raw/misc/VN_MISC5_V2.nc
       md5: 1e0083a0ef751734bcd1c246c7b08c95
       size: 1190675
     - path: data/raw/modeloutput
-      md5: 1586a30aa40498f2e08c28fe6b683525.dir
-      size: 520104142226
-      nfiles: 1002
+      md5: ab343cccdebde9cd7234aeea0ce6a52c.dir
+      size: 826938131943
+      nfiles: 1003
     outs:
     - path: data/intermediate
-      md5: ce76c247531ff6fc85b10371baf647ec.dir
-      size: 201390029
+      md5: aff3980fa218603405c3709ba7105fc4.dir
+      size: 201033276
       nfiles: 2

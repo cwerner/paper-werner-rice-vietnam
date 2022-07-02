@@ -357,13 +357,13 @@ def main(
     # use tmp dir for those files...
     with tempfile.TemporaryDirectory(dir=Path.cwd()) as tmp:
         ptmp = Path(tmp)
-        logger.info(ptmp)
+        # logger.info(ptmp)
 
         logger.debug(f"Using tmp folder {tmp}")
         logger.info("Stage 1a: Fully irrigated management files")
 
         workload = sorted(list(indir.glob("VN_arable_irrigated-ir72*.nc")))
-        logger.info(workload)
+        # logger.info(workload)
         process_annual(workload, outdir=tmp, vars=list(config.vars_annual), cores=cores)
         process_seasonal(
             workload, outdir=tmp, vars=list(config.vars_seasonal), cores=cores
@@ -372,7 +372,7 @@ def main(
         logger.info("Stage 1b: Fully irrigated and upland crop management files")
 
         workload = sorted(list(indir.glob("VN_arable_irrigated-upland-ir72*.nc")))
-        logger.info(workload)
+        # logger.info(workload)
         process_annual(workload, outdir=tmp, vars=list(config.vars_annual), cores=cores)
         process_seasonal(
             workload, outdir=tmp, vars=list(config.vars_seasonal), cores=cores
