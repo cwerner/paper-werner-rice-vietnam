@@ -40,7 +40,7 @@ stages:
     cmd: >-
       echo "scripts/relaimpo.py"
     deps:
-      - data/aggregated
+      - data/intermediate
     outs:
       - data/analysis/relaimpo.json
   
@@ -54,11 +54,11 @@ stages:
 
   analysis_plots:
     cmd: >-
-      echo "scripts/plots_basemaps.py" &&
-      echo "scripts/plots_emissions.py" &&
-      echo "scripts/plots_timeseries.py"
+      papermill nbs/plots_maps.ipynb - --progress-bar 1> /dev/null
+      # echo "scripts/plots_emissions.py" &&
+      # echo "scripts/plots_timeseries.py"
     deps:
-      - data/aggregated
-      - data/raw/gis
+      - data/intermediate
+      - data/raw/misc
     outs:
       - data/analysis/plots

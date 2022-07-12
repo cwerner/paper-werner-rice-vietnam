@@ -16,3 +16,20 @@ stages:
       md5: aff3980fa218603405c3709ba7105fc4.dir
       size: 201033276
       nfiles: 2
+  analysis_plots:
+    cmd: 'papermill nbs/plots_maps.ipynb - --progress-bar 1> /dev/null # echo "scripts/plots_emissions.py"
+      && # echo "scripts/plots_timeseries.py"'
+    deps:
+    - path: data/intermediate
+      md5: aff3980fa218603405c3709ba7105fc4.dir
+      size: 201033276
+      nfiles: 2
+    - path: data/raw/misc
+      md5: 4c30e80c97eccd684db698382c923cb5.dir
+      size: 4666289
+      nfiles: 7
+    outs:
+    - path: data/analysis/plots
+      md5: 8e0a2d516b808fc652d393bb1d1cb224.dir
+      size: 25942150
+      nfiles: 2
