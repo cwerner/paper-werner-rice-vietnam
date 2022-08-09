@@ -32,6 +32,7 @@ vars_annual = [
     "C_stubble",
     "DW_fru_export",
     "C_plant_litter",
+    "C_plant_export",
     "dC_ch4_emis",
     "dC_co2_emis_hetero",
     "dN_n2o_emis",
@@ -209,11 +210,13 @@ def aggregate_annual(ncfile: Path, *, outdir: Path, vars: Iterable[str]) -> None
     max_date = "2019-12-31"
 
     with xr.open_dataset(ncfile)[vars] as ds:
-        for var in ds.data_vars:
-            encoding[var] = comp
-
         mean_vars = ["surfacewater", "surfacetemperature"]
         sum_vars = [x for x in ds.data_vars if x not in mean_vars]
+        sum_vars += ["dC_residue"]
+        ds["dC_residue"] = ds["C_stubble"].where(ds["C_plant_export"] > 0)
+
+        for var in ds.data_vars:
+            encoding[var] = comp
 
         sum_ds = (
             ds[sum_vars]
@@ -227,6 +230,7 @@ def aggregate_annual(ncfile: Path, *, outdir: Path, vars: Iterable[str]) -> None
             .groupby("time.year")
             .mean(dim="time")
         )
+
         dsout = xr.merge([sum_ds, mean_ds])
         dsout.to_netcdf(
             outdir / ncfile.name.replace(".nc", "_yearly.nc"), encoding=encoding
@@ -248,6 +252,24 @@ def process_annual(
     ProgressParallel("AGG annual  ", n_jobs=cores)(
         delayed(func)(ncfile) for ncfile in workload
     )
+
+
+def merge_annual_for_relaimpo(
+    workload: Iterable[Any],
+    outdir: Union[str, Path],
+):
+    outdir = convert_strpath(outdir)
+
+    def func(ds):
+        var = next(var for var in ds)
+        sample_str = ds[var].encoding["source"].split("_ldndc_")[-2].split("-")[-1]
+        sample = int(sample_str)
+        return ds.assign(sample=sample)
+
+    with xr.open_mfdataset(
+        workload, concat_dim="sample", combine="nested", preprocess=func
+    ) as ds:
+        ds.to_netcdf(outdir / "annual_samples.nc")
 
 
 def calc_seasonal_pctl(
@@ -330,7 +352,7 @@ def main(
     indir: Path = typer.Argument(None, exists=True, file_okay=False),
     outdir: Path = typer.Argument(None, exists=True, file_okay=False),
     reffile: Path = typer.Argument(None, exists=True, dir_okay=False),
-    debug: bool = typer.Option(False, help="Print debugging output"),
+    debug: bool = typer.Option(True, help="Print debugging output"),
     cores: int = typer.Option(cpu_count()),
 ):
 
@@ -388,6 +410,10 @@ def main(
             workload1, workload2, outdir=tmp, ref=ref_da, cores=cores
         )
 
+        # aggregate annual for relaimpo
+        workload = sorted(list(ptmp.glob("*merged*yearly.nc")))
+        merge_annual_for_relaimpo(workload, outdir=outdir)
+
         workload1 = sorted(list(ptmp.glob("*irrigated-ir72*_seasonal.nc")))
         workload2 = sorted(list(ptmp.glob("*irrigated-upland-ir72*_seasonal.nc")))
         process_merge_mana_scens(
@@ -409,11 +435,3 @@ def main(
 
 if __name__ == "__main__":
     typer.run(main)
-
-    # ref_da = xr.open_dataset("data/raw/misc/VN_MISC5_V2.nc")['regionid'].load()
-    # tmp = "tmp"
-    # ptmp = Path(tmp)
-    # cores=8
-    # workload1 = sorted(list(ptmp.glob("*irrigated*_yearly.nc")))
-    # workload2 = sorted(list(ptmp.glob("*upland*_yearly.nc")))
-    # process_merge_mana_scens(workload1, workload2, outdir=tmp, ref=ref_da, cores=cores)
