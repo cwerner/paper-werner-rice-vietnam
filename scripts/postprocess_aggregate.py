@@ -393,7 +393,7 @@ def main(
 
         logger.info("Stage 1b: Fully irrigated and upland crop management files")
 
-        workload = sorted(list(indir.glob("VN_arable_irrigated-upland-ir72*.nc")))
+        workload = sorted(list(indir.glob("VN_arable_irrigated-upland*.nc")))
         # logger.info(workload)
         process_annual(workload, outdir=tmp, vars=list(config.vars_annual), cores=cores)
         process_seasonal(
@@ -405,7 +405,7 @@ def main(
         ref_da: xr.DataArray = xr.open_dataset(reffile)["regionid"].load()
 
         workload1 = sorted(list(ptmp.glob("*irrigated-ir72*_yearly.nc")))
-        workload2 = sorted(list(ptmp.glob("*irrigated-upland-ir72*_yearly.nc")))
+        workload2 = sorted(list(ptmp.glob("*irrigated-upland*_yearly.nc")))
         process_merge_mana_scens(
             workload1, workload2, outdir=tmp, ref=ref_da, cores=cores
         )
@@ -415,7 +415,7 @@ def main(
         merge_annual_for_relaimpo(workload, outdir=outdir)
 
         workload1 = sorted(list(ptmp.glob("*irrigated-ir72*_seasonal.nc")))
-        workload2 = sorted(list(ptmp.glob("*irrigated-upland-ir72*_seasonal.nc")))
+        workload2 = sorted(list(ptmp.glob("*irrigated-upland*_seasonal.nc")))
         process_merge_mana_scens(
             workload1, workload2, outdir=tmp, ref=ref_da, cores=cores
         )

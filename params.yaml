@@ -7,6 +7,7 @@ vars_annual:
 - C_stubble
 - DW_fru_export
 - C_plant_litter
+- C_plant_export
 - dC_ch4_emis
 - dC_co2_emis_hetero
 - dN_n2o_emis
