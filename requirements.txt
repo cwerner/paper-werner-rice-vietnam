@@ -9,8 +9,9 @@ dask[distributed]
 xarray
 omegaconf
 
-# papermill
+papermill
 
+pingouin
 proplot
 geopandas
 cartopy

@@ -33,3 +33,19 @@ stages:
       md5: 3226a7493471ccfe67d2060b260effd1.dir
       size: 25942150
       nfiles: 2
+  analysis_relaimpo:
+    cmd: papermill nbs/relaimpo.ipynb - --progress-bar 1> /dev/null
+    deps:
+    - path: data/intermediate
+      md5: e517934b2f00978d272354e2f7f4ae10.dir
+      size: 1351493650
+      nfiles: 3
+    - path: data/raw/misc
+      md5: de0786a1a974f481128b65208735f9da.dir
+      size: 204796867
+      nfiles: 20
+    outs:
+    - path: data/analysis/relaimpo
+      md5: fbaa8e42553c9ef3270032e081630d82.dir
+      size: 408476
+      nfiles: 6

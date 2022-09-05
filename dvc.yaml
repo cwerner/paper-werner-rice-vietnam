@@ -38,25 +38,24 @@ stages:
 
   analysis_relaimpo:
     cmd: >-
-      echo "scripts/relaimpo.py"
+      papermill nbs/relaimpo.ipynb - --progress-bar 1> /dev/null
     deps:
       - data/intermediate
+      - data/raw/misc
     outs:
-      - data/analysis/relaimpo.json
+      - data/analysis/relaimpo
   
-  analysis_summary_stats:
-    cmd: >-
-      echo "scripts/summary_stats.py"
-    deps:
-      - data/aggregated
-    outs:
-      - data/analysis/summary_stats.json
+  # analysis_summary_stats:
+  #   cmd: >-
+  #     echo "scripts/summary_stats.py"
+  #   deps:
+  #     - data/aggregated
+  #   outs:
+  #     - data/analysis/summary_stats.json
 
   analysis_plots:
     cmd: >-
       papermill nbs/plots_maps.ipynb - --progress-bar 1> /dev/null
-      # echo "scripts/plots_emissions.py" &&
-      # echo "scripts/plots_timeseries.py"
     deps:
       - data/intermediate
       - data/raw/misc
