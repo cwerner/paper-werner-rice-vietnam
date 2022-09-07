@@ -29,9 +29,9 @@ stages:
       nfiles: 21
     outs:
     - path: data/analysis/plots
-      md5: d00bff24c66fd88faf1d17f087590d39.dir
-      size: 25942150
-      nfiles: 2
+      md5: 9be325e438c9a92ff30c31d018a22175.dir
+      size: 143334264
+      nfiles: 10
   analysis_relaimpo:
     cmd: papermill nbs/relaimpo.ipynb - --progress-bar 1> /dev/null
     deps:

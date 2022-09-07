@@ -5,7 +5,7 @@ import warnings
 from functools import partial
 from io import StringIO
 from pathlib import Path
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -117,6 +117,54 @@ def aggregate_seasonal(ncfile: Path, *, outdir: Path, vars: Iterable[str]) -> No
     return None
 
 
+def merge_by_ratio(
+    ncfile1: Path,
+    ncfile2: Path,
+    *,
+    outdir: Path,
+    merge_ratio: Tuple[float, float] = (0.79, 0.21),
+):
+    """simple mixing of rice-only and mixed scenarios by ratio
+
+    NOTE: default merge ratio calculated based on FAO year 2010 data
+
+    ```
+    rice_rot_mixed = misc.rice_rot.where(misc.rice_rot > 1, (misc.rice_rot - 1))
+
+    # ignore landfrac/ coastal area reduction...
+    harvested_area_only = (misc.area_ha *  (misc.agrifrac * 0.01) * (misc.rice_fr * 0.01) * misc.rice_rot).sum().item()
+    harvested_area_mixed = (misc.area_ha *  (misc.agrifrac * 0.01) * (misc.rice_fr * 0.01) * rice_rot_mixed).sum().item()
+
+    # harvested rice area fao for year 2010 (ref. year since Guan et al. 2015 base their mapping on data from 2010)
+    harvested_area_fao = 7_489_400
+
+    frac_only = round((harvested_area_fao - harvested_area_mixed) / (harvested_area_only - harvested_area_mixed), 2)
+    frac_mixed = round(1 - frac_only, 2)
+    ```
+
+    """
+
+    comp = dict(zlib=True, complevel=5)
+    encoding = {}
+
+    with xr.open_dataset(ncfile1) as ds1, xr.open_dataset(ncfile2) as ds2:
+
+        dims = dict(ds1.dims)
+        dims.pop("lat", None)
+        dims.pop("lon", None)
+        mask1 = ds1.surfacetemperature.mean(dim=dims) > -100
+
+        dsout = (ds1 * merge_ratio + ds2 * (1 - merge_ratio)).where(mask1 > 0)
+
+        for var in dsout.data_vars:
+            encoding[var] = comp
+
+        dsout.to_netcdf(
+            outdir / ncfile1.name.replace("_irrigated-ir72", "_merged-ir72"),
+            encoding=encoding,
+        )
+
+
 def merge_by_merge_table(
     ncfile1: Path,
     ncfile2: Path,
@@ -178,7 +226,9 @@ def process_merge_mana_scens(
     ftype = "seasonal" if "seasonal" in str(workload1[0]) else "yearly"
 
     func = partial(
-        merge_by_merge_table, outdir=outdir, merge_table=merge_table, ref=ref
+        # merge_by_merge_table, outdir=outdir, merge_table=merge_table, ref=ref
+        merge_by_ratio,
+        outdir=outdir,
     )
     ProgressParallel(f"MERGE {ftype}", n_jobs=cores)(
         delayed(func)(ncfile1, ncfile2)
