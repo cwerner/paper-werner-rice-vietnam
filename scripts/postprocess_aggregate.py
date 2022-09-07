@@ -118,11 +118,7 @@ def aggregate_seasonal(ncfile: Path, *, outdir: Path, vars: Iterable[str]) -> No
 
 
 def merge_by_ratio(
-    ncfile1: Path,
-    ncfile2: Path,
-    *,
-    outdir: Path,
-    merge_ratio: Tuple[float, float] = (0.79, 0.21),
+    ncfile1: Path, ncfile2: Path, *, outdir: Path, merge_ratio: float = 0.79  # , 0.21),
 ):
     """simple mixing of rice-only and mixed scenarios by ratio
 

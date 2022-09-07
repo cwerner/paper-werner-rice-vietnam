@@ -2,49 +2,49 @@ schema: '2.0'
 stages:
   postprocess_aggregate:
     cmd: mkdir data/intermediate; python scripts/postprocess_aggregate.py data/raw/modeloutput
-      data/intermediate data/raw/misc/VN_MISC5_V2.nc
+      data/intermediate data/raw/misc/VN_MISC5_V3.nc
     deps:
-    - path: data/raw/misc/VN_MISC5_V2.nc
-      md5: 1e0083a0ef751734bcd1c246c7b08c95
-      size: 1190675
+    - path: data/raw/misc/VN_MISC5_V3.nc
+      md5: 5584729249c8963472cc3936d8d19dc8
+      size: 1190616
     - path: data/raw/modeloutput
       md5: ff71bfb6202409bdb873cb27f279a50f.dir
       size: 813845028393
       nfiles: 1002
     outs:
     - path: data/intermediate
-      md5: e517934b2f00978d272354e2f7f4ae10.dir
-      size: 1351493650
+      md5: 6eccc6d5b60fa4a717651014c04323fc.dir
+      size: 1372364988
       nfiles: 3
   analysis_plots:
     cmd: papermill nbs/plots_maps.ipynb - --progress-bar 1> /dev/null
     deps:
     - path: data/intermediate
-      md5: e517934b2f00978d272354e2f7f4ae10.dir
-      size: 1351493650
+      md5: 6eccc6d5b60fa4a717651014c04323fc.dir
+      size: 1372364988
       nfiles: 3
     - path: data/raw/misc
-      md5: e549152c5afa64ebcafd29f6dbc39faf.dir
-      size: 204796989
-      nfiles: 21
+      md5: 49d64ad6c789f1219ce441cf42313394.dir
+      size: 205989918
+      nfiles: 24
     outs:
     - path: data/analysis/plots
-      md5: 9be325e438c9a92ff30c31d018a22175.dir
-      size: 143334264
+      md5: defe09c8aa1d46ea247e9130fc61eb0e.dir
+      size: 143533870
       nfiles: 10
   analysis_relaimpo:
     cmd: papermill nbs/relaimpo.ipynb - --progress-bar 1> /dev/null
     deps:
     - path: data/intermediate
-      md5: e517934b2f00978d272354e2f7f4ae10.dir
-      size: 1351493650
+      md5: 6eccc6d5b60fa4a717651014c04323fc.dir
+      size: 1372364988
       nfiles: 3
     - path: data/raw/misc
-      md5: e549152c5afa64ebcafd29f6dbc39faf.dir
-      size: 204796989
-      nfiles: 21
+      md5: 49d64ad6c789f1219ce441cf42313394.dir
+      size: 205989918
+      nfiles: 24
     outs:
     - path: data/analysis/relaimpo
-      md5: 7f73921040b18791c8568beb42e62752.dir
-      size: 408476
+      md5: 1b06b341e3a421aa2c9bcbcfe261edca.dir
+      size: 415895
       nfiles: 6
