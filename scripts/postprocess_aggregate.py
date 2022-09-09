@@ -358,7 +358,11 @@ def calc_seasonal_pctl(
 
 
 def calc_annual_pctl(
-    workload: Iterable[Any], *, outdir: Union[str, Path], percentiles: Iterable[float]
+    workload: Iterable[Any],
+    *,
+    outdir: Union[str, Path],
+    percentiles: Iterable[float],
+    extra_name: str = "",
 ):
     outdir = convert_strpath(outdir)
     comp = dict(zlib=True, complevel=5)
@@ -391,7 +395,7 @@ def calc_annual_pctl(
 
                 progress.update(task, advance=1)
 
-        dsout.to_netcdf(outdir / "annual_pctl.nc", encoding=encoding)
+        dsout.to_netcdf(outdir / f"annual{extra_name}_pctl.nc", encoding=encoding)
 
 
 def main(
@@ -477,6 +481,17 @@ def main(
 
             workload = sorted(list(ptmp.glob("*merged*yearly.nc")))
             calc_annual_pctl(workload, outdir=outdir, percentiles=pctl)
+
+            # extra:
+            workload = sorted(list(ptmp.glob("*irrigated-ir72*_yearly.nc")))
+            calc_annual_pctl(
+                workload, outdir=outdir, percentiles=pctl, extra_name="_riceonly"
+            )
+
+            workload = sorted(list(ptmp.glob("*irrigated-upland*_yearly.nc")))
+            calc_annual_pctl(
+                workload, outdir=outdir, percentiles=pctl, extra_name="_mixed"
+            )
 
 
 if __name__ == "__main__":

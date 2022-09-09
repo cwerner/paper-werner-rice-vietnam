@@ -7,6 +7,7 @@ rich
 rich_click[typer]
 dask[distributed]
 xarray
+xlsxwriter
 omegaconf
 
 papermill
