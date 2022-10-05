@@ -7,3 +7,13 @@ rich
 rich_click[typer]
 dask[distributed]
 xarray
+xlsxwriter
+omegaconf
+
+papermill
+
+pingouin
+proplot
+geopandas
+cartopy
+git+https://github.com/lukelbd/proplot
