@@ -61,3 +61,21 @@ stages:
       - data/raw/misc
     outs:
       - data/analysis/plots
+
+  paper_plots:
+    cmd: >-
+      mkdir data/paper;
+      cp data/analysis/plots/emissions_merged_ch4_n2o_gwp.png data/paper/fig3_emissions_merged_ch4_n2o_gwp.png;
+      cp data/analysis/plots/emissions_merged_yield_yieldscaled.png data/paper/fig6_emissions_merged_yield_yieldscaled_gwp.png;
+      cp data/analysis/plots/emissions_riceonly_ch4_n2o_gwp.png data/paper/figS1_emissions_riceonly_ch4_n2o_gwp.png;
+      cp data/analysis/plots/emissions_riceonly_yield_yieldscaled.png data/paper/figS3_emissions_riceonly_yield_yieldscaled_gwp.png;
+      cp data/analysis/plots/emissions_seasonal_mekong.png data/paper/fig4_emissions_seasonal_mekong.png;
+      cp data/analysis/plots/emissions_seasonal_redriver.png data/paper/figS2_emissions_seasonal_redriver.png;
+      cp data/analysis/plots/management.png data/paper/fig1_management.png;
+      cp data/analysis/relaimpo/relaimpo.png data/paper/fig5_relaimpo.png;
+      cd data; tar cvfz paper.tgz paper; rm -Rf paper; cd ..
+    deps:
+      - data/analysis/plots
+      - data/analysis/relaimpo
+    outs:
+      - data/paper.tgz 

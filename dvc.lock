@@ -24,14 +24,14 @@ stages:
       size: 1389224645
       nfiles: 5
     - path: data/raw/misc
-      md5: 49d64ad6c789f1219ce441cf42313394.dir
-      size: 205989918
-      nfiles: 24
+      md5: ad1a5bd9c1159a8e9ff528edd2fbe6d2.dir
+      size: 60177474
+      nfiles: 12
     outs:
     - path: data/analysis/plots
-      md5: 657b9cd79a84aa5dec030899d223aa40.dir
-      size: 460308128
-      nfiles: 36
+      md5: 8c2f6197b35b4db067ddb3e8ad8f6129.dir
+      size: 315591286
+      nfiles: 40
   analysis_relaimpo:
     cmd: papermill nbs/relaimpo.ipynb - --progress-bar 1> /dev/null
     deps:
@@ -40,11 +40,34 @@ stages:
       size: 1389224645
       nfiles: 5
     - path: data/raw/misc
-      md5: 49d64ad6c789f1219ce441cf42313394.dir
-      size: 205989918
-      nfiles: 24
+      md5: ad1a5bd9c1159a8e9ff528edd2fbe6d2.dir
+      size: 60177474
+      nfiles: 12
     outs:
     - path: data/analysis/relaimpo
-      md5: be187789c883a3d18dcb96c6b7b19d8b.dir
-      size: 434093
+      md5: baebce22186ec7b6c006bb857c24c7cd.dir
+      size: 508147
       nfiles: 6
+  paper_plots:
+    cmd: mkdir data/paper; cp data/analysis/plots/emissions_merged_ch4_n2o_gwp.png
+      data/paper/fig3_emissions_merged_ch4_n2o_gwp.png; cp data/analysis/plots/emissions_merged_yield_yieldscaled.png
+      data/paper/fig6_emissions_merged_yield_yieldscaled_gwp.png; cp data/analysis/plots/emissions_riceonly_ch4_n2o_gwp.png
+      data/paper/figS1_emissions_riceonly_ch4_n2o_gwp.png; cp data/analysis/plots/emissions_riceonly_yield_yieldscaled.png
+      data/paper/figS3_emissions_riceonly_yield_yieldscaled_gwp.png; cp data/analysis/plots/emissions_seasonal_mekong.png
+      data/paper/fig4_emissions_seasonal_mekong.png; cp data/analysis/plots/emissions_seasonal_redriver.png
+      data/paper/figS2_emissions_seasonal_redriver.png; cp data/analysis/plots/management.png
+      data/paper/fig1_management.png; cp data/analysis/relaimpo/relaimpo.png data/paper/fig5_relaimpo.png;
+      cd data; tar cvfz paper.tgz paper; rm -Rf paper; cd ..
+    deps:
+    - path: data/analysis/plots
+      md5: 8c2f6197b35b4db067ddb3e8ad8f6129.dir
+      size: 315591286
+      nfiles: 40
+    - path: data/analysis/relaimpo
+      md5: baebce22186ec7b6c006bb857c24c7cd.dir
+      size: 508147
+      nfiles: 6
+    outs:
+    - path: data/paper.tgz
+      md5: 399f655a12ee323877ae3c599dab98b9
+      size: 6484279
