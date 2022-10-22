@@ -29,9 +29,9 @@ stages:
       nfiles: 12
     outs:
     - path: data/analysis/plots
-      md5: 8c2f6197b35b4db067ddb3e8ad8f6129.dir
-      size: 315591286
-      nfiles: 40
+      md5: 490412f0d46a64b140efe26dc8a7377a.dir
+      size: 684831076
+      nfiles: 48
   analysis_relaimpo:
     cmd: papermill nbs/relaimpo.ipynb - --progress-bar 1> /dev/null
     deps:
@@ -45,9 +45,9 @@ stages:
       nfiles: 12
     outs:
     - path: data/analysis/relaimpo
-      md5: baebce22186ec7b6c006bb857c24c7cd.dir
-      size: 508147
-      nfiles: 6
+      md5: 008fe68ce440622c6d41a91bc6d17d9e.dir
+      size: 21178905
+      nfiles: 7
   paper_plots:
     cmd: mkdir data/paper; cp data/analysis/plots/emissions_merged_ch4_n2o_gwp.png
       data/paper/fig3_emissions_merged_ch4_n2o_gwp.png; cp data/analysis/plots/emissions_merged_yield_yieldscaled.png
@@ -71,3 +71,72 @@ stages:
     - path: data/paper.tgz
       md5: 399f655a12ee323877ae3c599dab98b9
       size: 6484279
+  paper_plots@png:
+    cmd: mkdir data/paper; cp data/analysis/plots/emissions_merged_ch4_n2o_gwp.png
+      data/paper/fig3_emissions_merged_ch4_n2o_gwp.png; cp data/analysis/plots/emissions_merged_yield_yieldscaled.png
+      data/paper/fig6_emissions_merged_yield_yieldscaled_gwp.png; cp data/analysis/plots/emissions_riceonly_ch4_n2o_gwp.png
+      data/paper/figS1_emissions_riceonly_ch4_n2o_gwp.png; cp data/analysis/plots/emissions_riceonly_yield_yieldscaled.png
+      data/paper/figS3_emissions_riceonly_yield_yieldscaled_gwp.png; cp data/analysis/plots/emissions_seasonal_mekong.png
+      data/paper/fig4_emissions_seasonal_mekong.png; cp data/analysis/plots/emissions_seasonal_redriver.png
+      data/paper/figS2_emissions_seasonal_redriver.png; cp data/analysis/plots/management.png
+      data/paper/fig1_management.png; cp data/analysis/relaimpo/relaimpo.png data/paper/fig5_relaimpo.png;
+      cd data; tar cvfz paper.png.tgz paper; rm -Rf paper; cd ..
+    deps:
+    - path: data/analysis/plots
+      md5: 490412f0d46a64b140efe26dc8a7377a.dir
+      size: 684831076
+      nfiles: 48
+    - path: data/analysis/relaimpo
+      md5: 008fe68ce440622c6d41a91bc6d17d9e.dir
+      size: 21178905
+      nfiles: 7
+    outs:
+    - path: data/paper.png.tgz
+      md5: 44c89660530de30f356e3a047144c9c9
+      size: 5379809
+  paper_plots@tif:
+    cmd: mkdir data/paper; cp data/analysis/plots/emissions_merged_ch4_n2o_gwp.tif
+      data/paper/fig3_emissions_merged_ch4_n2o_gwp.tif; cp data/analysis/plots/emissions_merged_yield_yieldscaled.tif
+      data/paper/fig6_emissions_merged_yield_yieldscaled_gwp.tif; cp data/analysis/plots/emissions_riceonly_ch4_n2o_gwp.tif
+      data/paper/figS1_emissions_riceonly_ch4_n2o_gwp.tif; cp data/analysis/plots/emissions_riceonly_yield_yieldscaled.tif
+      data/paper/figS3_emissions_riceonly_yield_yieldscaled_gwp.tif; cp data/analysis/plots/emissions_seasonal_mekong.tif
+      data/paper/fig4_emissions_seasonal_mekong.tif; cp data/analysis/plots/emissions_seasonal_redriver.tif
+      data/paper/figS2_emissions_seasonal_redriver.tif; cp data/analysis/plots/management.tif
+      data/paper/fig1_management.tif; cp data/analysis/relaimpo/relaimpo.tif data/paper/fig5_relaimpo.tif;
+      cd data; tar cvfz paper.tif.tgz paper; rm -Rf paper; cd ..
+    deps:
+    - path: data/analysis/plots
+      md5: 490412f0d46a64b140efe26dc8a7377a.dir
+      size: 684831076
+      nfiles: 48
+    - path: data/analysis/relaimpo
+      md5: 008fe68ce440622c6d41a91bc6d17d9e.dir
+      size: 21178905
+      nfiles: 7
+    outs:
+    - path: data/paper.tif.tgz
+      md5: 0f070ed00a1e726ae782f5975080e5b4
+      size: 6204549
+  paper_plots@pdf:
+    cmd: mkdir data/paper; cp data/analysis/plots/emissions_merged_ch4_n2o_gwp.pdf
+      data/paper/fig3_emissions_merged_ch4_n2o_gwp.pdf; cp data/analysis/plots/emissions_merged_yield_yieldscaled.pdf
+      data/paper/fig6_emissions_merged_yield_yieldscaled_gwp.pdf; cp data/analysis/plots/emissions_riceonly_ch4_n2o_gwp.pdf
+      data/paper/figS1_emissions_riceonly_ch4_n2o_gwp.pdf; cp data/analysis/plots/emissions_riceonly_yield_yieldscaled.pdf
+      data/paper/figS3_emissions_riceonly_yield_yieldscaled_gwp.pdf; cp data/analysis/plots/emissions_seasonal_mekong.pdf
+      data/paper/fig4_emissions_seasonal_mekong.pdf; cp data/analysis/plots/emissions_seasonal_redriver.pdf
+      data/paper/figS2_emissions_seasonal_redriver.pdf; cp data/analysis/plots/management.pdf
+      data/paper/fig1_management.pdf; cp data/analysis/relaimpo/relaimpo.pdf data/paper/fig5_relaimpo.pdf;
+      cd data; tar cvfz paper.pdf.tgz paper; rm -Rf paper; cd ..
+    deps:
+    - path: data/analysis/plots
+      md5: 490412f0d46a64b140efe26dc8a7377a.dir
+      size: 684831076
+      nfiles: 48
+    - path: data/analysis/relaimpo
+      md5: 008fe68ce440622c6d41a91bc6d17d9e.dir
+      size: 21178905
+      nfiles: 7
+    outs:
+    - path: data/paper.pdf.tgz
+      md5: c4e7045ca05ec231c93e29f11df2206e
+      size: 302945843
